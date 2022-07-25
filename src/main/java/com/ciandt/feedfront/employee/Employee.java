@@ -23,7 +23,7 @@ public class Employee {
         return null;
     }
 
-    public static Employee atualizarEmployee(Employee employee) throws ArquivoException, EmailInvalidoException, EmployeeNaoEncontradoException {
+    public static Employee atualizarEmployee(Employee employee) throws ArquivoException, EmailInvalidoException {
         return null;
     }
 
