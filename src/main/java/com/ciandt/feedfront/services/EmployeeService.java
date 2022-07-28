@@ -28,7 +28,9 @@ public class EmployeeService implements Service<Employee> {
         try {
             return dao.buscar(id);
         } catch (IOException | EmployeeNaoEncontradoException e) {
-            throw new BusinessException("Employee não encontrado");
+            throw new EntidadeNaoEncontradaException("não foi possível encontrar o employee");
+        } catch (FeedbackNaoEncontradoException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -47,7 +49,7 @@ public class EmployeeService implements Service<Employee> {
             }
         }
         if (emailExistente) {
-            throw new EmailInvalidoException("E-mail ja cadastrado no repositorio");
+            throw new EmailInvalidoException("já existe um employee cadastrado com esse e-mail");
         }
         try {
             return dao.salvar(employee);
@@ -59,6 +61,19 @@ public class EmployeeService implements Service<Employee> {
     @Override
     public Employee atualizar(Employee employee) throws ArquivoException, BusinessException {
         buscar(employee.getId());
+
+        boolean emailExistente = false;
+        List<Employee> employees = listar();
+        for (Employee employeeSalvo: employees) {
+            if (!employeeSalvo.getId().equals(employee.getId()) && employeeSalvo.getEmail().equals(employee.getEmail())) {
+                emailExistente = true;
+                break;
+            }
+        }
+        if (emailExistente) {
+            throw new EmailInvalidoException("E-mail ja cadastrado no repositorio");
+        }
+
         try {
             return dao.salvar(employee);
         } catch (IOException e) {

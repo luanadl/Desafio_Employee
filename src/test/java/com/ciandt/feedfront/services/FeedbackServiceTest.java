@@ -1,14 +1,15 @@
 package com.ciandt.feedfront.services;
 
+import com.ciandt.feedfront.contracts.DAO;
 import com.ciandt.feedfront.contracts.Service;
-import com.ciandt.feedfront.excecoes.ArquivoException;
-import com.ciandt.feedfront.excecoes.BusinessException;
-import com.ciandt.feedfront.excecoes.ComprimentoInvalidoException;
-import com.ciandt.feedfront.excecoes.EntidadeNaoEncontradaException;
+import com.ciandt.feedfront.excecoes.*;
 import com.ciandt.feedfront.models.Feedback;
 import com.ciandt.feedfront.models.Employee;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.mockito.Mock;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 public class FeedbackServiceTest {
 
@@ -31,22 +33,23 @@ public class FeedbackServiceTest {
 
     private Service<Feedback> service;
 
+    private DAO<Feedback> feedbackDao;
+
     @BeforeEach
-    public void initEach() throws IOException , ComprimentoInvalidoException {
+    public void initEach() throws IOException, BusinessException {
         // Este trecho de código serve somente para limpar o repositório
-        Files.walk(Paths.get("src/main/resources/data/feedback/"))
-                .filter(p -> p.toString().endsWith(".byte"))
-                .forEach(p -> {
-                    new File(p.toString()).delete();
-                });
+//        Files.walk(Paths.get("src/main/resources/data/feedback/"))
+//                .filter(p -> p.toString().endsWith(".byte"))
+//                .forEach(p -> {
+//                    new File(p.toString()).delete();
+//                });
 
         service = new FeedbackService();
         autor = new Employee("João", "Silveira", "j.silveira@email.com");
         proprietario = new Employee("Mateus", "Santos", "m.santos@email.com");
-
         feedback = new Feedback(localDate, autor, proprietario, LOREM_IPSUM_FEEDBACK);
-
-        service.salvar(feedback);
+        service.setDAO(feedbackDao);
+        feedbackDao = (DAO<Feedback>) Mockito.mock(DAO.class);
     }
 
     @Test
@@ -59,29 +62,37 @@ public class FeedbackServiceTest {
     }
 
     @Test
-    public void salvar() throws ArquivoException, BusinessException, ComprimentoInvalidoException {
+    public void salvar() throws IOException, BusinessException, ComprimentoInvalidoException, EmployeeNaoEncontradoException, FeedbackNaoEncontradoException {
         Employee employeeNaoSalvo = new Employee("miguel", "vitor", "m.vitor@email.com");
 
-        Feedback feedbackValido1 = new Feedback(localDate, autor, proprietario, LOREM_IPSUM_FEEDBACK);
+        Employee proprietario2 = new Employee("Matiii", "Suuu", "m@");
+
+        Feedback feedbackValido1 = new Feedback(localDate, proprietario2, proprietario, LOREM_IPSUM_FEEDBACK);
         Feedback feedbackValido2 = new Feedback(localDate, autor, proprietario, LOREM_IPSUM_FEEDBACK);
 
-        Feedback feedbackInvalido1 = new Feedback(localDate, null, null,"feedback sem autor e proprietario");
-        Feedback feedbackInvalido2 = new Feedback(localDate, null, employeeNaoSalvo,"feedback sem autor e proprietario");
+        Feedback feedbackInvalido1 = new Feedback(localDate, null, null, "feedback sem autor e proprietario");
+        Feedback feedbackInvalido2 = new Feedback(localDate, autor, employeeNaoSalvo, "feedback sem autor e proprietario");
 
+        when(feedbackDao.salvar(feedbackValido1)).thenReturn(feedbackValido1);
+        when(feedbackDao.salvar(feedbackValido2)).thenReturn(feedbackValido2);
+        when(feedbackDao.buscar(feedbackValido2.getId())).thenReturn(feedbackValido2);
+        when(feedbackDao.buscar(feedbackValido1.getId())).thenReturn(feedbackValido1);
+        when(feedbackDao.buscar(feedbackInvalido2.getId())).thenThrow(new IOException());
+        service.setDAO(feedbackDao);
         assertDoesNotThrow(() -> service.salvar(feedbackValido1));
         assertDoesNotThrow(() -> service.salvar(feedbackValido2));
 
-        Exception exception1 = assertThrows(IllegalArgumentException.class,() -> service.salvar(feedbackInvalido1));
-        Exception exception2 = assertThrows(IllegalArgumentException.class,() -> service.salvar(null));
-        Exception exception3 = assertThrows(EntidadeNaoEncontradaException.class,() -> service.salvar(feedbackInvalido2));
+        Exception exception1 = assertThrows(IllegalArgumentException.class, () -> service.salvar(feedbackInvalido1));
+        Exception exception2 = assertThrows(IllegalArgumentException.class, () -> service.salvar(null));
+        Exception exception3 = assertThrows(EntidadeNaoEncontradaException.class, () -> service.salvar(feedbackInvalido2));
 
-        assertEquals("employee inválido", exception1.getMessage());
+        assertEquals("feedback inválido", exception1.getMessage());
         assertEquals("feedback inválido", exception2.getMessage());
-        assertEquals("não foi possível encontrar o employee", exception3.getMessage());
+        assertEquals("não foi possível encontrar o feedback", exception3.getMessage());
     }
 
     @Test
-    public void buscar() throws ArquivoException, BusinessException {
+    public void buscar() throws IOException, BusinessException, EmployeeNaoEncontradoException, FeedbackNaoEncontradoException {
         Feedback feedbackNaoSalvo = new Feedback(localDate, autor, proprietario, "tt");
 
         assertDoesNotThrow(() -> service.buscar(feedback.getId()));

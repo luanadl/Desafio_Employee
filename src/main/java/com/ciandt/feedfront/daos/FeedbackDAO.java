@@ -2,10 +2,10 @@ package com.ciandt.feedfront.daos;
 
 import com.ciandt.feedfront.contracts.DAO;
 import com.ciandt.feedfront.excecoes.ArquivoException;
-import com.ciandt.feedfront.excecoes.EmailInvalidoException;
 import com.ciandt.feedfront.excecoes.EmployeeNaoEncontradoException;
-import com.ciandt.feedfront.models.Employee;
 import com.ciandt.feedfront.excecoes.EntidadeNaoSerializavelException;
+import com.ciandt.feedfront.excecoes.FeedbackNaoEncontradoException;
+import com.ciandt.feedfront.models.Feedback;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -16,8 +16,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class EmployeeDAO implements DAO<Employee> {
-    private String repositorioPath = "src/main/resources/data/employee/";
+public class FeedbackDAO implements DAO<Feedback> {
+
+    private String repositorioPath = "src/main/resources/data/feedback/";
 
     private static ObjectOutputStream getOutputStream(String arquivo) throws IOException {
         return new ObjectOutputStream(new FileOutputStream(arquivo));
@@ -33,8 +34,8 @@ public class EmployeeDAO implements DAO<Employee> {
     }
 
     @Override
-    public List<Employee> listar() throws IOException, EntidadeNaoSerializavelException {
-        List<Employee> employees = new ArrayList<>();
+    public List<Feedback> listar() throws IOException, EntidadeNaoSerializavelException {
+        List<Feedback> feedbacks = new ArrayList<>();
 
         try {
             Stream<Path> paths = Files.walk(Paths.get(repositorioPath));
@@ -46,47 +47,46 @@ public class EmployeeDAO implements DAO<Employee> {
                     .collect(Collectors.toList());
 
             for (String file: files) {
-                employees.add(buscar(file));
+                feedbacks.add(buscar(file));
             }
 
             paths.close();
         } catch (IOException e) {
             throw new EntidadeNaoSerializavelException();
-        } catch (EmployeeNaoEncontradoException e) {
+        } catch (FeedbackNaoEncontradoException e) {
             throw new RuntimeException(e);
         }
 
-        return employees;
+        return feedbacks;
     }
 
-    @Override
-    public Employee buscar(String id) throws IOException, EntidadeNaoSerializavelException, EmployeeNaoEncontradoException {
-        Employee employee;
+    public Feedback buscar(String id) throws IOException, EntidadeNaoSerializavelException, FeedbackNaoEncontradoException {
+        Feedback feedback;
         ObjectInputStream inputStream;
 
         try {
             inputStream = getInputStream(repositorioPath + id + ".byte");
-            employee = (Employee) inputStream.readObject();
+            feedback = (Feedback) inputStream.readObject();
 
             inputStream.close();
         } catch (IOException | ClassNotFoundException e) {
             if (e.getClass().getSimpleName().equals("FileNotFoundException")) {
-                throw new IOException("Employee não encontrado");
+                throw new IOException("Feedback não encontrado");
             }
 
             throw new ArquivoException("");
         }
 
-        return employee;
+        return feedback;
     }
 
     @Override
-    public Employee salvar(Employee employee) throws IOException, EntidadeNaoSerializavelException {
+    public Feedback salvar(Feedback feedback) throws IOException, EntidadeNaoSerializavelException {
         ObjectOutputStream outputStream = null;
 
         try {
-            outputStream = getOutputStream(employee.arquivo);
-            outputStream.writeObject(employee);
+            outputStream = getOutputStream(feedback.arquivo);
+            outputStream.writeObject(feedback);
 
             outputStream.close();
         } catch (IOException e) {
@@ -95,7 +95,7 @@ public class EmployeeDAO implements DAO<Employee> {
             throw new ArquivoException("");
         }
 
-        return employee;
+        return feedback;
     }
 
     @Override
@@ -103,9 +103,10 @@ public class EmployeeDAO implements DAO<Employee> {
         try{
             buscar(id);
             new File(String.format("%s%s.byte", repositorioPath, id)).delete();
-        }catch (IOException e){
+        }catch (IOException | FeedbackNaoEncontradoException e){
             throw new EntidadeNaoSerializavelException();
         }
         return true;
     }
+
 }

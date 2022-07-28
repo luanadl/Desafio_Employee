@@ -1,6 +1,8 @@
 package com.ciandt.feedfront.controllers;
 
-import com.ciandt.feedfront.controllers.FeedbackController;
+import com.ciandt.feedfront.controller.FeedbackController;
+import com.ciandt.feedfront.excecoes.ArquivoException;
+import com.ciandt.feedfront.excecoes.BusinessException;
 import com.ciandt.feedfront.excecoes.ComprimentoInvalidoException;
 import com.ciandt.feedfront.models.Employee;
 import com.ciandt.feedfront.models.Feedback;
@@ -41,11 +43,20 @@ public class FeedbackControllerTest {
 
         feedback = new Feedback(LocalDate.now(), autor, proprietario,"Agradeco muito pelo apoio feito pelo colega!");//construtor 1
 
-        controller.salvar(feedback);
+        try {
+            controller.salvar(feedback);
+        } catch (BusinessException e) {
+            throw new RuntimeException(e);
+        }
     }
     @Test
     public void listar() {
-        Collection<Feedback> listaFeedback = controller.listar();
+        Collection<Feedback> listaFeedback = null;
+        try {
+            listaFeedback = controller.listar();
+        } catch (ArquivoException e) {
+            throw new RuntimeException(e);
+        }
 
         assertNotNull(listaFeedback);
     }

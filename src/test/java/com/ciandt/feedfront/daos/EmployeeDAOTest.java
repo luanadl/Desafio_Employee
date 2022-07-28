@@ -2,6 +2,8 @@ package com.ciandt.feedfront.daos;
 
 import com.ciandt.feedfront.contracts.DAO;
 import com.ciandt.feedfront.excecoes.ComprimentoInvalidoException;
+import com.ciandt.feedfront.excecoes.EmployeeNaoEncontradoException;
+import com.ciandt.feedfront.excecoes.FeedbackNaoEncontradoException;
 import com.ciandt.feedfront.models.Employee;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,9 +57,14 @@ public class EmployeeDAOTest {
     }
 
     @Test
-    public void salvar() throws IOException, ComprimentoInvalidoException {
+    public void salvar() throws IOException, ComprimentoInvalidoException, EmployeeNaoEncontradoException {
         String id = employee.getId();
-        Employee employeeSalvo = employeeDAO.buscar(id);
+        Employee employeeSalvo = null;
+        try {
+            employeeSalvo = employeeDAO.buscar(id);
+        } catch (FeedbackNaoEncontradoException e) {
+            throw new RuntimeException(e);
+        }
         Employee employeeNaoSalvo = new Employee("Jose", "Silveira", "j.silveira@email.com");
 
         assertEquals(employee, employeeSalvo);
@@ -69,7 +76,14 @@ public class EmployeeDAOTest {
         employee.setNome("bruno");
         employee.setEmail("b.silveira@email.com");
 
-        Employee employeeSalvo = employeeDAO.buscar(employee.getId());
+        Employee employeeSalvo = null;
+        try {
+            employeeSalvo = employeeDAO.buscar(employee.getId());
+        } catch (EmployeeNaoEncontradoException e) {
+            throw new RuntimeException(e);
+        } catch (FeedbackNaoEncontradoException e) {
+            throw new RuntimeException(e);
+        }
 
         assertNotEquals(employeeSalvo.getNome(), employee.getNome());
         assertNotEquals(employeeSalvo.getEmail(), employee.getEmail());

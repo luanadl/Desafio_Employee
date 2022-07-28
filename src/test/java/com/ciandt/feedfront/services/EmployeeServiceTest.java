@@ -52,14 +52,18 @@ public class EmployeeServiceTest {
     public void buscarMalSucedida() throws IOException {
         String uuid = "11f2105a-4f5b-4a48-bf57-3a4ff8b477b1";
 
-        when(employeeDAO.buscar(uuid)).thenThrow(FileNotFoundException.class);
+        try {
+            when(employeeDAO.buscar(uuid)).thenThrow(FileNotFoundException.class);
+        } catch (EmployeeNaoEncontradoException | FeedbackNaoEncontradoException e) {
+            throw new RuntimeException(e);
+        }
 
         Exception exception = assertThrows(EntidadeNaoEncontradaException.class, () -> employeeService.buscar(uuid));
         assertEquals("não foi possível encontrar o employee", exception.getMessage());
     }
 
     @Test
-    public void buscarBemSucedida() throws IOException {
+    public void buscarBemSucedida() throws IOException, EmployeeNaoEncontradoException, FeedbackNaoEncontradoException {
         String uuid = employee.getId();
 
         when(employeeDAO.buscar(uuid)).thenReturn(employee);
@@ -86,7 +90,7 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void atualizar() throws IOException, ComprimentoInvalidoException, BusinessException, ArquivoException {
+    public void atualizar() throws IOException, ComprimentoInvalidoException, BusinessException, ArquivoException, EmployeeNaoEncontradoException, FeedbackNaoEncontradoException {
         Employee employee2 = new Employee("Bruno", "Silveira", "b.silveira@email.com");
         Employee employee3 = new Employee("Vitor", "Fernandes", "vf.silveira@email.com");
 
@@ -115,7 +119,7 @@ public class EmployeeServiceTest {
     }
 
     @Test
-    public void apagar() throws IOException, ComprimentoInvalidoException {
+    public void apagar() throws IOException, ComprimentoInvalidoException, EmployeeNaoEncontradoException {
         Employee employee2 = new Employee("Bruno", "Silveira", "b.silveira@email.com");
         String uuidValido = employee.getId();
         String uuidInvalido = employee2.getId();

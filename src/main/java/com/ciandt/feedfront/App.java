@@ -1,7 +1,5 @@
 package com.ciandt.feedfront;
 
-import com.ciandt.feedfront.contracts.DAO;
-import com.ciandt.feedfront.controller.EmployeeController;
 import com.ciandt.feedfront.daos.EmployeeDAO;
 import com.ciandt.feedfront.excecoes.ComprimentoInvalidoException;
 import com.ciandt.feedfront.models.Employee;
