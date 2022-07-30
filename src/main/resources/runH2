@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export PATH=$PATH:/tmp/H2DB/jre1.8/bin
+
+export CLASSPATH=export CLASSPATH=$HOME/.m2/repository/com/h2database/h2/2.1.214/h2-2.1.214.jar
+
+java -classpath $CLASSPATH org.h2.tools.Server -webAllowOthers -ifNotExists -tcpAllowOthers -pgAllowOthers -baseDir ~/
